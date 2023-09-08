@@ -7205,6 +7205,30 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 
 	class Object3D extends EventDispatcher {
 
+		set visible( value ) {
+
+			this.visibilityMap.set( 'default', value );
+
+		}
+
+		get visible() {
+
+			for ( const entry of this.visibilityMap ) {
+
+				if ( entry[ 1 ] === false ) return false;
+
+			}
+
+			return true;
+
+		}
+
+		setVisibility( key, value ) {
+
+			value ? this.visibilityMap.delete( key ) : this.visibilityMap.set( key, value );
+
+		}
+
 		constructor() {
 
 			super();
@@ -7281,6 +7305,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 			this.matrixWorldAutoUpdate = Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE; // checked by the renderer
 
 			this.layers = new Layers();
+			this.visibilityMap = new Map();
 			this.visible = true;
 
 			this.castShadow = false;
