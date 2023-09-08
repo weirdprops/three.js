@@ -1,7 +1,7 @@
 import { Quaternion } from '../math/Quaternion.js';
 import { Vector3 } from '../math/Vector3.js';
 import { Matrix4 } from '../math/Matrix4.js';
-import { EventDispatcher } from './EventDispatcher.js';
+import { Event, EventDispatcher } from './EventDispatcher.js';
 import { Euler } from '../math/Euler.js';
 import { Layers } from './Layers.js';
 import { Matrix3 } from '../math/Matrix3.js';
@@ -335,7 +335,7 @@ class Object3D extends EventDispatcher {
 			object.parent = this;
 			this.children.push( object );
 
-			object.dispatchEvent( _addedEvent );
+			object.dispatchEvent( new Event( _addedEvent, { bubbles: true } ) );
 
 		} else {
 
@@ -368,7 +368,7 @@ class Object3D extends EventDispatcher {
 			object.parent = null;
 			this.children.splice( index, 1 );
 
-			object.dispatchEvent( _removedEvent );
+			object.dispatchEvent( new Event( _removedEvent, { bubbles: true } ) );
 
 		}
 

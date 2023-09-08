@@ -218,54 +218,77 @@ const WebGPUCoordinateSystem = 2001;
  * https://github.com/mrdoob/eventdispatcher.js/
  */
 
+class Event {
+
+	path = null;
+
+	constructor( eventData, options ) {
+
+		Object.assign( this, eventData );
+
+		if ( ( options && ! options.bubbles ) || ! options ) {
+
+			this.isBubblingStopped = true;
+
+		}
+
+	}
+
+	stopQueue() {
+
+		this.isQueueStopped = true;
+
+	}
+
+	stopBubbling() {
+
+		this.isBubblingStopped = true;
+
+	}
+
+}
+
 class EventDispatcher {
 
-	addEventListener( type, listener ) {
+	listeners = new Map();
 
-		if ( this._listeners === undefined ) this._listeners = {};
+	addEventListener( type, callback, options ) {
 
-		const listeners = this._listeners;
+		const typedListeners = this.listeners.get( type ) || [];
+		const priority = options?.priority || 0;
 
-		if ( listeners[ type ] === undefined ) {
+		const existingListener = typedListeners.findIndex( ( listener ) => listener.callback === callback );
 
-			listeners[ type ] = [];
+		if ( existingListener === - 1 ) {
 
-		}
-
-		if ( listeners[ type ].indexOf( listener ) === - 1 ) {
-
-			listeners[ type ].push( listener );
+			typedListeners.push( { priority, callback } );
+			typedListeners.sort( ( listenerA, listenerB ) => listenerB.priority - listenerA.priority );
 
 		}
 
-	}
-
-	hasEventListener( type, listener ) {
-
-		if ( this._listeners === undefined ) return false;
-
-		const listeners = this._listeners;
-
-		return listeners[ type ] !== undefined && listeners[ type ].indexOf( listener ) !== - 1;
+		this.listeners.set( type, typedListeners );
 
 	}
 
-	removeEventListener( type, listener ) {
+	hasEventListener( type, callback ) {
 
-		if ( this._listeners === undefined ) return;
+		const typedListeners = this.listeners.get( type );
+		if ( ! typedListeners ) return false;
 
-		const listeners = this._listeners;
-		const listenerArray = listeners[ type ];
+		return typedListeners.findIndex( ( listener ) => listener.callback === callback ) !== - 1;
 
-		if ( listenerArray !== undefined ) {
+	}
 
-			const index = listenerArray.indexOf( listener );
+	removeEventListener( type, callback ) {
 
-			if ( index !== - 1 ) {
+		const typedListeners = this.listeners.get( type );
+		if ( typedListeners === undefined ) return;
 
-				listenerArray.splice( index, 1 );
+		const index = typedListeners.findIndex( ( listener ) => listener.callback === callback );
 
-			}
+		if ( index !== - 1 ) {
+
+			typedListeners.splice( index, 1 );
 
 		}
 
@@ -273,25 +296,44 @@ class EventDispatcher {
 
 	dispatchEvent( event ) {
 
-		if ( this._listeners === undefined ) return;
+		let typedListeners = this.listeners.get( event.type ) || [];
 
-		const listeners = this._listeners;
-		const listenerArray = listeners[ event.type ];
+		if ( ! event.target ) event.target = this;
 
-		if ( listenerArray !== undefined ) {
+		if ( ! event.path ) {
 
-			event.target = this;
+			const path = [];
+			let current = this;
+			while ( current.parent ) {
 
-			// Make a copy, in case listeners are removed while iterating.
-			const array = listenerArray.slice( 0 );
-
-			for ( let i = 0, l = array.length; i < l; i ++ ) {
-
-				array[ i ].call( this, event );
+				path.push( current.parent );
+				current = current.parent;
 
 			}
 
-			event.target = null;
+			event.path = path;
+
+		}
+
+		// Make a copy, in case listeners are removed while iterating.
+		typedListeners = typedListeners.slice( 0 );
+
+		for ( let i = 0, l = typedListeners.length; i < l; i ++ ) {
+
+			if ( event.isQueueStopped ) {
+
+				event.isQueueStopped = false;
+				break;
+
+			}
+
+			typedListeners[ i ].callback.call( this, event );
+
+		}
+
+		if ( event.path.length && ! event.isBubblingStopped ) {
+
+			event.path.pop().dispatchEvent( event );
 
 		}
 
@@ -7464,7 +7506,7 @@ class Object3D extends EventDispatcher {
 			object.parent = this;
 			this.children.push( object );
 
-			object.dispatchEvent( _addedEvent );
+			object.dispatchEvent( new Event( _addedEvent, { bubbles: true } ) );
 
 		} else {
 
@@ -7497,7 +7539,7 @@ class Object3D extends EventDispatcher {
 			object.parent = null;
 			this.children.splice( index, 1 );
 
-			object.dispatchEvent( _removedEvent );
+			object.dispatchEvent( new Event( _removedEvent, { bubbles: true } ) );
 
 		}
 
