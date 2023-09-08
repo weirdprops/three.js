@@ -51648,6 +51648,7 @@ console.warn( 'Scripts "build/three.js" and "build/three.min.js" are deprecated 
 	exports.EquirectangularReflectionMapping = EquirectangularReflectionMapping;
 	exports.EquirectangularRefractionMapping = EquirectangularRefractionMapping;
 	exports.Euler = Euler;
+	exports.Event = Event;
 	exports.EventDispatcher = EventDispatcher;
 	exports.ExtrudeGeometry = ExtrudeGeometry;
 	exports.FileLoader = FileLoader;

@@ -51643,6 +51643,7 @@ exports.EqualStencilFunc = EqualStencilFunc;
 exports.EquirectangularReflectionMapping = EquirectangularReflectionMapping;
 exports.EquirectangularRefractionMapping = EquirectangularRefractionMapping;
 exports.Euler = Euler;
+exports.Event = Event;
 exports.EventDispatcher = EventDispatcher;
 exports.ExtrudeGeometry = ExtrudeGeometry;
 exports.FileLoader = FileLoader;
